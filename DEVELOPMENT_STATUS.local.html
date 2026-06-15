@@ -1,0 +1,876 @@
+<!doctype html>
+<html lang="ko">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <meta http-equiv="refresh" content="20">
+  <title>Data Collector Development Status</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f8fb;
+      --panel: #ffffff;
+      --text: #20242c;
+      --muted: #667085;
+      --line: #d9dee8;
+      --accent: #2563eb;
+      --ok: #12805c;
+      --wait: #a15c00;
+      --todo: #5b6472;
+      --risk: #b42318;
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      font-family: Arial, "Noto Sans KR", sans-serif;
+      background: var(--bg);
+      color: var(--text);
+    }
+
+    main {
+      width: min(1180px, calc(100% - 32px));
+      margin: 28px auto 48px;
+    }
+
+    header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 24px;
+      margin-bottom: 22px;
+    }
+
+    h1 {
+      margin: 0 0 8px;
+      font-size: 28px;
+      line-height: 1.2;
+    }
+
+    h2 {
+      margin: 0 0 14px;
+      font-size: 18px;
+    }
+
+    p {
+      margin: 0;
+      color: var(--muted);
+      line-height: 1.55;
+    }
+
+    code {
+      padding: 2px 5px;
+      border: 1px solid var(--line);
+      border-radius: 4px;
+      background: #f3f5f9;
+      font-size: 0.95em;
+    }
+
+    .stamp {
+      min-width: 260px;
+      padding: 12px 14px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .full {
+      grid-column: 1 / -1;
+    }
+
+    section {
+      min-width: 0;
+      padding: 18px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 14px;
+    }
+
+    th,
+    td {
+      padding: 10px 9px;
+      border-top: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      color: var(--muted);
+      font-weight: 700;
+    }
+
+    ul {
+      margin: 0;
+      padding-left: 20px;
+    }
+
+    li {
+      margin: 8px 0;
+      line-height: 1.5;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 24px;
+      padding: 2px 8px;
+      border-radius: 999px;
+      border: 1px solid currentColor;
+      font-size: 12px;
+      font-weight: 700;
+      white-space: nowrap;
+    }
+
+    .done {
+      color: var(--ok);
+    }
+
+    .doing {
+      color: var(--accent);
+    }
+
+    .waiting {
+      color: var(--wait);
+    }
+
+    .todo {
+      color: var(--todo);
+    }
+
+    .risk {
+      color: var(--risk);
+    }
+
+    .note {
+      padding: 12px 14px;
+      border-left: 4px solid var(--accent);
+      background: #eef4ff;
+      color: #243b68;
+      line-height: 1.55;
+    }
+
+    .timeline-wrap {
+      overflow-x: auto;
+      padding-bottom: 4px;
+    }
+
+    .calendar {
+      min-width: 980px;
+      display: grid;
+      grid-template-columns: 96px repeat(3, minmax(240px, 1fr));
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      background: #fff;
+    }
+
+    .cal-head,
+    .time-cell,
+    .slot {
+      border-right: 1px solid var(--line);
+      border-bottom: 1px solid var(--line);
+    }
+
+    .cal-head {
+      position: sticky;
+      top: 0;
+      z-index: 1;
+      padding: 11px 12px;
+      background: #f3f5f9;
+      font-weight: 700;
+      color: #344054;
+    }
+
+    .cal-head:last-child {
+      border-right: 0;
+    }
+
+    .time-cell {
+      min-height: 96px;
+      padding: 12px 10px;
+      background: #f8fafc;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    .slot {
+      min-height: 96px;
+      padding: 8px;
+      background: #fff;
+    }
+
+    .event {
+      height: 100%;
+      min-height: 74px;
+      padding: 10px;
+      border: 1px solid #b9c7df;
+      border-left: 4px solid var(--accent);
+      border-radius: 7px;
+      background: #eef4ff;
+      font-size: 13px;
+      line-height: 1.45;
+    }
+
+    .event strong {
+      display: block;
+      margin-bottom: 5px;
+      color: #1d2939;
+      font-size: 14px;
+    }
+
+    .event small {
+      display: block;
+      margin-top: 6px;
+      color: var(--muted);
+    }
+
+    .event.long {
+      min-height: 154px;
+      background: #ecfdf3;
+      border-color: #abefc6;
+      border-left-color: var(--ok);
+    }
+
+    .event.warn {
+      background: #fff7ed;
+      border-color: #fed7aa;
+      border-left-color: var(--wait);
+    }
+
+    .event.stop {
+      background: #fff1f3;
+      border-color: #fecdd6;
+      border-left-color: var(--risk);
+    }
+
+    .empty {
+      color: #98a2b3;
+      font-size: 13px;
+    }
+
+    @media (max-width: 760px) {
+      header,
+      .grid {
+        display: block;
+      }
+
+      .stamp,
+      section {
+        margin-top: 14px;
+      }
+
+      .calendar {
+        min-width: 860px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <main>
+    <header>
+      <div>
+        <h1>Data Collector 개발 상태</h1>
+        <p>이 파일은 메인 채팅에서만 관리하는 로컬 진행판입니다. Git에 포함하지 않는 개발 확인용 문서입니다.</p>
+      </div>
+      <div class="stamp">
+        <strong>마지막 업데이트</strong><br>
+        2026-06-15 09:50 KST<br>
+        <strong>관리 주체</strong><br>
+        메인 채팅 전용
+      </div>
+    </header>
+
+    <div class="grid">
+      <section class="full">
+        <h2>운영 원칙</h2>
+        <div class="note">
+          이 메인 채팅은 설계, 선택 사항 결정, TODO 관리, 서브 에이전트 할당, 결과 검수만 담당합니다.
+          실제 구현 작업은 별도 서브 에이전트에 할당하고, 이 status HTML은 메인 채팅만 업데이트합니다.
+        </div>
+      </section>
+
+      <section>
+        <h2>현재 목표</h2>
+        <ul>
+          <li>회사 내부망에서 실행할 수집 서버 -> 다운로드 클라이언트 파일 수집 테스트 웹앱의 설계를 확정합니다.</li>
+          <li>로컬에서는 코드 생산과 mock 검증만 수행하고, 실제 route/SSH 테스트는 내부망에서 pull 후 수행합니다.</li>
+          <li>route 적용 전후의 경로, 수집 처리량, 로그, 원복 결과를 확인할 수 있게 만듭니다.</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>결정된 사항</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>항목</th>
+              <th>결정</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>개발 방식</td>
+              <td>메인 채팅 설계/검수, 서브 에이전트 구현</td>
+            </tr>
+            <tr>
+              <td>실행 환경</td>
+              <td>실제 테스트는 회사 내부망에서 수행</td>
+            </tr>
+            <tr>
+              <td>로컬 역할</td>
+              <td>코드 생산, mock/dry-run 검증, 문서화</td>
+            </tr>
+            <tr>
+              <td>Status HTML</td>
+              <td><code>DEVELOPMENT_STATUS.local.html</code>, 개발 진행 확인용, 배포 산출물 아님</td>
+            </tr>
+            <tr>
+              <td>초기 기술 스택</td>
+              <td><code>FastAPI + React/Vite</code></td>
+            </tr>
+            <tr>
+              <td>웹앱 실행 위치</td>
+              <td>웹 제어 호스트에서 실행</td>
+            </tr>
+            <tr>
+              <td>SSH 인증</td>
+              <td>Password 기반, env로 설정</td>
+            </tr>
+            <tr>
+              <td>sudo 인증</td>
+              <td>Password 필요. env에서 읽어 stdin으로 전달하는 방식 검토</td>
+            </tr>
+            <tr>
+              <td>수집 명령</td>
+              <td>기존 스크립트 경로를 설정으로 제공받아 실행</td>
+            </tr>
+            <tr>
+              <td>웹앱 역할</td>
+              <td>단계별 클릭 실행, 활성화 여부 확인, one-call 실행/종료, 검증 스크립트 로그 출력</td>
+            </tr>
+            <tr>
+              <td>운영 가이드</td>
+              <td><code>exist_guild.sh</code> 분석 완료. 실제 실행 스크립트가 아니라 수동 절차 문서에 가까움. 장기 유지 프로세스와 단발 프로세스 구분 필요</td>
+            </tr>
+            <tr>
+              <td>프로세스 생명주기</td>
+              <td>port-forward와 HTTP file server는 세션 유지형, downloader는 완료 후 종료형</td>
+            </tr>
+            <tr>
+              <td>반복 단위</td>
+              <td><code>수집 시작 -> server -> 다운로드 -> 정리</code>는 테스트 케이스별 반복 cycle. 더 이상 테스트가 없으면 원복</td>
+            </tr>
+            <tr>
+              <td>스크립트 배포</td>
+              <td><code>02_recursive_http_file_server.py</code>, <code>02_recursive_http_file_downloader.py</code>는 구현 시 현재 repo에서 대상 서버/pod로 복사하는 방식 선호</td>
+            </tr>
+            <tr>
+              <td>터미널 타임라인</td>
+              <td>기존 수동 흐름은 <code>docs/existing-data-flow.html</code>로 분리</td>
+            </tr>
+            <tr>
+              <td>웹 조작 단위</td>
+              <td>터미널 기준이 아니라 action 중심으로 구성. 터미널 정보는 실행 위치/로그 세부정보로 표시</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="full">
+        <h2>TODO</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>상태</th>
+              <th>작업</th>
+              <th>담당</th>
+              <th>메모</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><span class="badge done">완료</span></td>
+              <td>현재 운영 상황 파악</td>
+              <td>메인 채팅</td>
+              <td>수집 서버/릴레이 서버/다운로드 클라이언트 네트워크 구조, route 전후 검증 포인트 정리 완료</td>
+            </tr>
+            <tr>
+              <td><span class="badge done">완료</span></td>
+              <td>개발 진행 방식 결정</td>
+              <td>메인 채팅</td>
+              <td>메인 채팅은 설계/검수, 구현은 서브 에이전트로 분리</td>
+            </tr>
+            <tr>
+              <td><span class="badge done">완료</span></td>
+              <td>로컬 status HTML 생성</td>
+              <td>메인 채팅</td>
+              <td>진행 내용, 할당, 확인사항을 계속 갱신</td>
+            </tr>
+            <tr>
+              <td><span class="badge doing">진행중</span></td>
+              <td>웹앱 1차 범위 확정</td>
+              <td>사용자 + 메인 채팅</td>
+              <td>수집/전송 중심 조작 모델로 재정리. run 상태 모델, 실패 시 정책, 프로세스 제어 방식 결정 필요</td>
+            </tr>
+            <tr>
+              <td><span class="badge todo">대기</span></td>
+              <td>서브 에이전트 작업 1차 할당</td>
+              <td>메인 채팅</td>
+              <td>설계 승인 후 기능 단위로 분리해 할당</td>
+            </tr>
+            <tr>
+              <td><span class="badge done">완료</span></td>
+              <td><code>exist_guild.sh</code> 실행 흐름 분석</td>
+              <td>메인 채팅</td>
+              <td>수집 서버 접속, port-forward, route on/off, pod 내부 수집, HTTP server, 다운로드 클라이언트 다운로드 흐름 확인</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>Action 중심 조작 모델</h2>
+        <ul>
+          <li>수집: collector 시작/중지를 toggle 버튼으로 제공</li>
+          <li>수집 모니터링: 기본 1초마다 확인. 파일 10개 증가와 각 파일명 timestamp가 100ms 간격인지 확인해 정상 판정</li>
+          <li>용량 모니터링: 수집 정상 여부가 아니라 10G 초과 시 주의 알림을 표시하는 기준으로 사용</li>
+          <li>수집 fatal UX: fatal 발생 시 문제 설명 박스를 띄우고, 사용자가 계속 진행 또는 수집 정지 중 선택</li>
+          <li>전송: 테스트 이름 입력 후 전송 시작을 누르면 route on, port-forward on, 전송 서버 시작, 다운로드 실행, 전송 서버 중지, route/port-forward 원복을 자동 진행</li>
+          <li>정리: 산출물 정리는 수집 action이 아니라 전송 성공 후 수행되는 후처리로 분류. 기본값 on인 auto delete toggle로 제어</li>
+          <li>수집 fatal 처리: collector 자동 중지 없음. 사용자가 상황 확인 후 toggle off 여부를 결정하도록 안내</li>
+          <li>전송 재시도: 다운로드 실패 시 다운로드 폴더를 밀지 않고 전송 서버와 downloader를 재시작해 최대 3회 자동 재시도. 3회 실패 후에는 정지 또는 재시도를 사용자가 선택</li>
+          <li>원복 실패: port-forward/route 원복 실패 시 직접 실행할 명령을 메시지 박스로 안내</li>
+          <li>반복 실행: 테스트 목록을 순회하며 필요한 시점에 수집 toggle과 전송 시작 action을 사용</li>
+          <li>수동 절차의 터미널 분리는 웹 UI 구조로 끌고 오지 않음</li>
+          <li>터미널 1/2/3 정보는 버튼 구조가 아니라 각 action의 실행 위치와 로그 맥락으로 표시</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>테스트 입력 기본값</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>항목</th>
+              <th>기본값</th>
+              <th>설명</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><code>test_name</code></td>
+              <td>필수 입력</td>
+              <td>다운로드 대상 테스트 디렉터리 이름</td>
+            </tr>
+            <tr>
+              <td><code>download_date</code></td>
+              <td>오늘 날짜, <code>yymmdd</code></td>
+              <td>다운로드 클라이언트에서 날짜별 저장 경로를 만들 때 사용</td>
+            </tr>
+            <tr>
+              <td><code>download_root_dir</code></td>
+              <td>env 설정</td>
+              <td>다운로드 클라이언트에서 <code>download_date/test_name</code>을 만들 상위 디렉터리. 거의 변경되지 않는 값</td>
+            </tr>
+            <tr>
+              <td><code>workers</code></td>
+              <td><code>8</code></td>
+              <td>downloader worker 수</td>
+            </tr>
+            <tr>
+              <td><code>cell-id</code></td>
+              <td><code>1</code></td>
+              <td>collector 실행 인자</td>
+            </tr>
+            <tr>
+              <td><code>poll-interval</code></td>
+              <td><code>5</code></td>
+              <td>collector 실행 인자</td>
+            </tr>
+            <tr>
+              <td><code>slot-step</code></td>
+              <td><code>2</code></td>
+              <td>collector 실행 인자</td>
+            </tr>
+            <tr>
+              <td><code>slot-count</code></td>
+              <td><code>10</code></td>
+              <td>collector 실행 인자</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section>
+        <h2>프로세스 추적 추천안</h2>
+        <ul>
+          <li>MVP는 파일 기반 상태 저장 사용: <code>runtime/processes.json</code>, <code>runs/{run_id}/state.json</code>, <code>runs/{run_id}/events.jsonl</code></li>
+          <li>유지형 프로세스는 SSH 실행 세션이 살아 있으면 실행 중으로 보고, 세션 종료/끊김/exit status로 상태 판단</li>
+          <li>보조 확인 예시: 앱 재시작 또는 상태 불일치 시 <code>pgrep</code>, <code>kubectl exec ... pgrep</code>, <code>ip route get</code> 사용</li>
+          <li>앱 재시작 시 <code>runtime/processes.json</code>을 읽고 필요한 경우에만 collector, port-forward, file server 상태를 재확인</li>
+          <li>앱이 만들지 않은 기존 프로세스가 감지되면 외부 프로세스 감지 및 수동 확인 필요 상태로 표시</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>스크립트 배포 추천안</h2>
+        <ul>
+          <li>repo 내 위치: <code>scripts/transfer/</code></li>
+          <li>server script: <code>scripts/transfer/02_recursive_http_file_server.py</code></li>
+          <li>downloader script: <code>scripts/transfer/02_recursive_http_file_downloader.py</code></li>
+          <li>웹앱 시작 시 두 파일 존재 여부 확인. 누락 시 setup error 표시 및 전송 시작 비활성화</li>
+          <li>실제 내부망에서는 해당 위치에 실제 파일을 넣는 방식으로 운영</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>환경 설정 예시</h2>
+        <ul>
+          <li>MVP에서는 별도 admin token 없이 내부망 접근 전제로 시작</li>
+          <li>필수 env: <code>COLLECTOR_HOST</code>, <code>COLLECTOR_USER</code>, <code>COLLECTOR_PASSWORD</code>, <code>COLLECTOR_SUDO_PASSWORD</code>, <code>COLLECTOR_POD_NAME_PATTERN</code></li>
+          <li>다운로드 env: <code>DOWNLOAD_HOST</code>, <code>DOWNLOAD_USER</code>, <code>DOWNLOAD_PASSWORD</code>, <code>DOWNLOAD_ROOT_DIR</code></li>
+          <li>SSH/sudo password는 <code>.env</code>에서 읽고 화면/로그에 출력하지 않음</li>
+          <li>password, full SSH URL, 민감 경로는 로그 마스킹</li>
+          <li>backend는 allowlist action만 실행하고 임의 shell command 입력은 허용하지 않음</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>확정된 세부 정책</h2>
+        <ul>
+          <li>SSH 상태 매핑: 연결 중 <code>running</code>, exit code 0 <code>completed</code>, exit code != 0 <code>failed</code>, 연결 끊김 <code>needs_check</code>, stderr+0 <code>completed_with_warning</code></li>
+          <li>auto delete 실패: 실패 원인 출력, <code>재시도</code>/<code>취소</code> 버튼 제공. 취소 시 수동 삭제 안내</li>
+          <li>원복 실패: 직접 실행할 port-forward/route 원복 명령과 <code>상태 재확인</code> 버튼 표시</li>
+          <li>스크립트 배포: repo의 <code>scripts/transfer/</code> 파일을 항상 overwrite. 백업은 MVP 범위에서 제외</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>다음 결정사항</h2>
+        <ul>
+          <li>전송 실패 정의: 연결 실패, 다음 파일 요청 실패, 단일 파일 부분 다운로드 실패를 어떻게 구분할지 결정</li>
+          <li>로그/상태 저장: JSONL 로그, run 상태 파일, 추후 SQLite 전환 여부 결정</li>
+          <li><code>COLLECTOR_POD_NAME_PATTERN</code> 기본값을 <code>dpp</code>로 둘지, UI에서 선택 가능하게 할지 결정</li>
+          <li>내부망 검증 후 SSH/pod 명령 출력, downloader exit code, route/port-forward 실패 케이스 기반 조정</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>결정 우선순위</h2>
+        <ul>
+          <li>1순위: 테스트 입력 모델과 실행 단위. UI 구조와 API 경계가 여기서 결정됨</li>
+          <li>2순위: 프로세스 제어와 실패 정책. 내부망 테스트 중 복구 가능성을 좌우함</li>
+          <li>3순위: 스크립트 배포와 로그 저장. 구현 방식은 중요하지만 MVP에서 단순화 가능</li>
+          <li>4순위: 보안/접근. 내부망 단일 사용자 전제면 최소 토큰 보호로 시작 가능</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>MVP 기능 초안</h2>
+        <ul>
+          <li>수집 패널: collector toggle, 파일 생성 정상 여부, 파일 수, 용량 표시</li>
+          <li>수집 fatal: 1초 체크에서 파일 10개 증가 또는 100ms timestamp 간격이 한 번이라도 어긋나면 fatal error 상태 표시</li>
+          <li>수집 fatal 선택 박스: 문제 설명, 계속 진행, 수집 정지 버튼 제공</li>
+          <li>수집 주의: 용량이 10G를 초과하면 주의 알림 표시</li>
+          <li>전송 패널: 테스트 이름 입력, 전송 시작 버튼, 자동 단계 진행 상태 표시</li>
+          <li>전송 옵션: auto delete toggle 제공. 기본 on, off면 전송 성공 후 수동 삭제 버튼 제공</li>
+          <li>전송 자동 단계: route on -> port-forward on -> server on -> download -> server off -> auto delete 조건 확인 -> port-forward/route off</li>
+          <li>전송 retry: 다운로드 실패 시 server 재기동 후 최대 3회 자동 재시도. 3회 실패 후 정지 또는 다시 시도 선택 박스 표시</li>
+          <li>원복 실패 안내: port-forward/route 직접 실행 명령을 메시지 박스로 표시</li>
+          <li>One-call 실행: 테스트 목록을 순회하며 수집 상태 확인 후 전송 시작 action을 자동 실행</li>
+          <li>One-call 종료/원복: 실행 중인 유지형 프로세스 종료, route 원복, 최종 상태 확인</li>
+          <li>로그 출력: 각 명령의 stdout/stderr, 시작/종료 시각, exit code, 실행 서버, 실행 단계 표시</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>사용자 확인 필요</h2>
+        <ul>
+          <li>MVP에서 로그 저장을 파일 기반으로 시작할지, SQLite까지 포함할지 결정</li>
+          <li>수집 시작/서버 시작 명령은 dpp pod 내부에서 실행하는 것으로 보이므로, 웹앱이 <code>kubectl exec</code>로 실행해도 되는지 확인</li>
+          <li>수집 스크립트 실행 인자 형식과 성공/실패 판정 기준 확인</li>
+          <li>sudo password env 저장 허용 범위와 내부망 보안 정책 확인</li>
+          <li>웹앱 접근 사용자가 1명인지, 간단한 로그인/토큰 보호가 필요한지 확인</li>
+          <li>downloader가 부분 다운로드 파일을 남기는지, 이어받기/덮어쓰기/검증 로직이 있는지 확인</li>
+          <li>가이드의 <code>--rout-dir</code> 옵션명이 실제 스크립트에서 맞는지 확인</li>
+          <li>repo에 실제 server/downloader 스크립트를 넣을 수 있는지, 아니면 dummy placeholder로 개발 후 내부망에서 교체할지 결정</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>서브 에이전트 현황</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>에이전트</th>
+              <th>작업</th>
+              <th>상태</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>-</td>
+              <td>아직 할당 없음</td>
+              <td><span class="badge waiting">대기</span></td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="full">
+        <h2>기존 데이터 수집 타임라인</h2>
+        <p>터미널 1/2/3 기준 수동 운영 흐름은 <code>docs/existing-data-flow.html</code>에서 관리하고, push 가능한 sanitized 참고본은 <code>docs/existing-data-flow.html</code>로 생성했습니다.</p>
+      </section>
+
+      <section class="full">
+        <h2>exist_guild.sh 분석 요약</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>단계</th>
+              <th>실행 위치</th>
+              <th>내용</th>
+              <th>웹앱 step 후보</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>수집 서버 접속</td>
+              <td>웹 제어 호스트 -> 수집 서버</td>
+              <td><code>ssh ${COLLECTOR_USER}@${COLLECTOR_HOST}</code></td>
+              <td>수집 서버 SSH 연결 확인</td>
+            </tr>
+            <tr>
+              <td>port-forward 유지</td>
+              <td>수집 서버</td>
+              <td>dpp pod 조회 후 <code>kubectl port-forward --address 0.0.0.0 ${dpp} 18818:18818</code></td>
+              <td>port-forward 시작/상태 확인/전체 완료 후 중지</td>
+            </tr>
+            <tr>
+              <td>route on</td>
+              <td>수집 서버</td>
+              <td><code>${TRANSFER_SUBNET_1}</code>, <code>${TRANSFER_SUBNET_2}</code>를 <code>${COLLECTOR_GATEWAY}</code>로 추가</td>
+              <td>route 추가 및 적용 확인</td>
+            </tr>
+            <tr>
+              <td>dpp pod 접속</td>
+              <td>수집 서버 -> pod</td>
+              <td>dpp pod 내부 <code>/tmp</code>에서 수집 consumer 실행</td>
+              <td>pod 명령 실행 API로 대체</td>
+            </tr>
+            <tr>
+              <td>수집 시작</td>
+              <td>dpp pod</td>
+              <td><code>nohup ./run_srs_consumer ... & disown</code></td>
+              <td>collector start</td>
+            </tr>
+            <tr>
+              <td>수집 확인</td>
+              <td>dpp pod</td>
+              <td><code>ls</code>, <code>wc -l</code>, <code>du -sh</code>로 파일 수/용량 증가 확인</td>
+              <td>health check / progress check</td>
+            </tr>
+            <tr>
+              <td>HTTP server on</td>
+              <td>dpp pod</td>
+              <td><code>02_recursive_http_file_server.py --bind 0.0.0.0 --port 18818 --rout-dir /tmp/out</code></td>
+              <td>file server 시작/다운로드 완료 후 중지</td>
+            </tr>
+            <tr>
+              <td>다운로드</td>
+              <td>다운로드 클라이언트</td>
+              <td>다운로드 클라이언트에서 downloader script 실행, base URL은 <code>http://${COLLECTOR_HOST}:${TRANSFER_PORT}</code></td>
+              <td>다운로드 클라이언트 SSH 연결 및 download start. 완료되면 프로세스 종료</td>
+            </tr>
+            <tr>
+              <td>종료/정리</td>
+              <td>수집 서버 / pod</td>
+              <td><code>pkill -9 run_srs_consumer</code>, route del, 필요 시 데이터 정리</td>
+              <td>one-call stop / cleanup</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="full">
+        <h2>내부망 검증 핵심</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>검증</th>
+              <th>명령/기대 결과</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>route 적용 전 다운로드 클라이언트 경로</td>
+              <td><code>ip route get ${DOWNLOAD_HOST}</code> 결과 저장</td>
+            </tr>
+            <tr>
+              <td>route 적용 후 다운로드 클라이언트 경로</td>
+              <td><code>${DOWNLOAD_HOST} via ${COLLECTOR_GATEWAY} dev ${COLLECTOR_INTERFACE} src ${COLLECTOR_HOST}</code> 형태 기대</td>
+            </tr>
+            <tr>
+              <td>원복 확인</td>
+              <td><code>ip route show</code>에서 추가한 <code>${TRANSFER_SUBNET_1}</code>, <code>${TRANSFER_SUBNET_2}</code> route 제거 확인</td>
+            </tr>
+            <tr>
+              <td>성능 기준</td>
+              <td>생성량 약 7.1MB/s 이상 안정 처리, 여유 기준 10~20MB/s</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+
+      <section class="full">
+        <h2>변경 로그</h2>
+        <table>
+          <thead>
+            <tr>
+              <th>시간</th>
+              <th>내용</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td>2026-06-09 11:55 KST</td>
+              <td>로컬 status HTML 초안 생성. 메인 채팅 전용 관리 및 push 제외 원칙 반영.</td>
+            </tr>
+            <tr>
+              <td>2026-06-09 12:03 KST</td>
+              <td>사용자 확인사항 반영. FastAPI + React/Vite, 웹 제어 호스트 실행, password 기반 SSH, env 기반 설정, 수집 스크립트 경로 제공 전제 기록.</td>
+            </tr>
+            <tr>
+              <td>2026-06-09 12:08 KST</td>
+              <td>웹앱 역할 초안 반영. 단계별 클릭 실행, 활성화 확인, one-call 실행/종료, 정상 동작 확인 스크립트 로그 출력 중심으로 MVP 정리.</td>
+            </tr>
+            <tr>
+              <td>2026-06-10 10:20 KST</td>
+              <td><code>exist_guild.sh</code> 분석 결과 반영. 수동 운영 절차를 웹앱 step 후보로 분해하고 추가 확인사항을 갱신.</td>
+            </tr>
+            <tr>
+              <td>2026-06-10 10:28 KST</td>
+              <td><code>exist_guild.sh</code> 주석 수정사항 반영. port-forward와 file server는 유지형 프로세스, downloader는 완료 후 종료되는 단발 프로세스로 설계에 반영.</td>
+            </tr>
+            <tr>
+              <td>2026-06-10 10:36 KST</td>
+              <td>사용자 검수용 터미널별 타임라인 초안 추가. 터미널 1/2/3의 실행 위치, 동작, 종료 조건을 분리해 기록.</td>
+            </tr>
+            <tr>
+              <td>2026-06-10 10:44 KST</td>
+              <td>터미널별 타임라인을 표 형식에서 캘린더형 3열 도식으로 변경. 유지형 프로세스와 단발 프로세스가 한눈에 보이도록 수정.</td>
+            </tr>
+            <tr>
+              <td>2026-06-10 10:58 KST</td>
+              <td>이전 타임라인이 가이드의 터미널 주석 구분과 맞지 않아, <code>exist_guild.sh</code> 라인 범위 기준으로 터미널 1/2/3 도식을 재작성.</td>
+            </tr>
+            <tr>
+              <td>2026-06-10 11:07 KST</td>
+              <td>유지 중인 프로세스를 반복 셀 대신 병합형 긴 블록으로 표시. port-forward와 file server가 여러 흐름 구간에 걸쳐 보이도록 수정.</td>
+            </tr>
+            <tr>
+              <td>2026-06-10 11:18 KST</td>
+              <td>수집/server/다운로드/정리를 테스트 케이스별 반복 cycle로 반영. server/downloader 스크립트는 현재 repo에서 대상 환경으로 복사하는 구현 방향 기록.</td>
+            </tr>
+            <tr>
+              <td>2026-06-10 11:28 KST</td>
+              <td>반복 조건 행을 제거하고 흐름 축에 <code>test_N cycle</code>을 병합 표시. server와 다운로드를 같은 전송 흐름으로 재배치.</td>
+            </tr>
+            <tr>
+              <td>2026-06-10 11:33 KST</td>
+              <td><code>test_N cycle</code> 병합 범위에 정리 단계까지 포함되도록 수정.</td>
+            </tr>
+            <tr>
+              <td>2026-06-10 11:39 KST</td>
+              <td>port-forward 병합 블록을 정리 단계까지 확장하고, 병합 셀 경계선이 빠져 보이는 CSS를 수정.</td>
+            </tr>
+            <tr>
+              <td>2026-06-10 11:47 KST</td>
+              <td>터미널 타임라인 1차 정리 완료 상태를 기록하고, 다음 결정사항 섹션을 추가.</td>
+            </tr>
+            <tr>
+              <td>2026-06-10 12:03 KST</td>
+              <td>기존 데이터 수집 타임라인을 <code>docs/existing-data-flow.html</code>로 분리. 테스트 디렉터리 생성을 다운로드 준비에 포함하고, 웹 조작 단위를 action 중심으로 확정.</td>
+            </tr>
+            <tr>
+              <td>2026-06-10 12:17 KST</td>
+              <td>수동 절차의 <code>test_N cycle</code> 표현을 웹앱 설계에서 제거하고, 수집 action과 전송 action 중심으로 조작 모델을 재정리.</td>
+            </tr>
+            <tr>
+              <td>2026-06-10 12:28 KST</td>
+              <td>다음 결정사항을 실행 단위, 테스트 입력 모델, 전송 준비 범위, 프로세스 제어, 실패 정책, 스크립트 배포, 로그/보안 순서로 재정리.</td>
+            </tr>
+            <tr>
+              <td>2026-06-10 12:42 KST</td>
+              <td>수집은 toggle과 모니터링 중심, 전송은 테스트 이름 기반 자동 orchestration으로 결정. 산출물 정리는 전송 완료 후 후처리로 이동.</td>
+            </tr>
+            <tr>
+              <td>2026-06-10 12:55 KST</td>
+              <td>용량은 10G 초과 경고 기준으로 조정. 다운로드 실패 시 server 재기동 후 최대 3회 retry, 실패 지속 시 원복 후 에러 표시 정책 반영.</td>
+            </tr>
+            <tr>
+              <td>2026-06-10 13:08 KST</td>
+              <td>다른 세션 인계를 위한 <code>DEVELOPMENT_CONTEXT.md</code> 생성. 기존 흐름 HTML은 민감값을 placeholder로 치환하고 <code>docs/existing-data-flow.html</code> push용 참고본 생성.</td>
+            </tr>
+            <tr>
+              <td>2026-06-10 13:25 KST</td>
+              <td>테스트 입력 기본값, 수집 정상 판단 기준, 10G 주의 알림, cycle 완료 시 무조건 port-forward/route 원복 정책을 반영.</td>
+            </tr>
+            <tr>
+              <td>2026-06-10 13:34 KST</td>
+              <td><code>download_root_dir</code>는 env 설정으로 확정. 수집 모니터링은 1초 체크 1회 실패도 fatal error로 처리하도록 반영.</td>
+            </tr>
+            <tr>
+              <td>2026-06-11 09:18 KST</td>
+              <td>수집 fatal 시 자동 중지하지 않는 정책 확정. 전송 실패 시 다운로드 폴더를 삭제하지 않고 server/downloader 재시작으로 retry. 프로세스 추적과 <code>scripts/transfer/</code> 배포 디렉터리 추천안 추가.</td>
+            </tr>
+            <tr>
+              <td>2026-06-11 09:27 KST</td>
+              <td>수집 fatal 발생 시 전송 시작을 일방 차단하지 않고, 문제 설명 박스에서 계속 진행 또는 수집 정지를 사용자가 선택하도록 결정.</td>
+            </tr>
+            <tr>
+              <td>2026-06-11 09:36 KST</td>
+              <td>다운로드 성공 후 정리는 기본 on인 auto delete toggle로 제어. 전송 retry는 3회 자동 후 정지/재시도 선택. 원복 실패 시 직접 실행 명령 안내 메시지 표시로 결정.</td>
+            </tr>
+            <tr>
+              <td>2026-06-11 09:48 KST</td>
+              <td>프로세스 상태 확인 명령 예시와 보안/접근 예시를 추가. auto delete 실패 UX와 retry 무제한 재시도 정책을 반영.</td>
+            </tr>
+            <tr>
+              <td>2026-06-11 10:02 KST</td>
+              <td>프로세스 상태 판단을 SSH 세션/exit status 중심으로 수정. admin token은 MVP에서 제외하고 collector/download env 중심 설정으로 정리.</td>
+            </tr>
+            <tr>
+              <td>2026-06-11 10:14 KST</td>
+              <td><code>DEVELOPMENT_CONTEXT.md</code>를 현재 진행 상태에 맞춰 재정리. 상단 설계 상태 요약, 프로세스 추적 정책, 남은 결정사항을 최신화.</td>
+            </tr>
+            <tr>
+              <td>2026-06-15 09:50 KST</td>
+              <td>결정사항 1~4를 추천안대로 확정. SSH 상태 매핑, auto delete 실패 UX, 원복 실패 메시지, 스크립트 overwrite 정책을 세부 정책으로 이동.</td>
+            </tr>
+          </tbody>
+        </table>
+      </section>
+    </div>
+  </main>
+</body>
+</html>
