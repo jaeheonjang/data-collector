@@ -867,6 +867,10 @@
               <td>2026-06-15 09:50 KST</td>
               <td>결정사항 1~4를 추천안대로 확정. SSH 상태 매핑, auto delete 실패 UX, 원복 실패 메시지, 스크립트 overwrite 정책을 세부 정책으로 이동.</td>
             </tr>
+            <tr>
+              <td>2026-06-15 18:42 KST</td>
+              <td><code>docs/k8s_pod_shm_access_summary.html</code>에 <code>/proc/&lt;PID&gt;/root/dev/shm</code> 접근 원리와 직접 hostPath mount 실패(<code>invalid argument</code>) 사례를 추가. 현재 방향을 privileged Pod에서 host <code>/proc</code> mount 후 런타임 접근으로 정리.</td>
+            </tr>
           </tbody>
         </table>
       </section>
