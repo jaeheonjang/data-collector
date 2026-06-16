@@ -385,5 +385,5 @@ sudo ip route del ${TRANSFER_SUBNET_2} via ${COLLECTOR_GATEWAY}
 
 ## 로컬 관리 파일
 
-- `DEVELOPMENT_STATUS.local.html`: 메인 채팅이 관리하는 개발 진행판. 배포 산출물이 아니라 진행 확인용 문서.
+- `DEVELOPMENT_PROGRESS.html`: 메인 채팅이 관리하는 개발 진행판. 배포 산출물이 아니라 진행 확인용 문서.
 - `docs/existing-data-flow.html`: push 가능한 sanitized 기존 수동 흐름 참고 도식.

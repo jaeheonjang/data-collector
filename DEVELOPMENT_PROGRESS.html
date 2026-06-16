@@ -341,7 +341,7 @@
             </tr>
             <tr>
               <td>Status HTML</td>
-              <td><code>DEVELOPMENT_STATUS.local.html</code>, 개발 진행 확인용, 배포 산출물 아님</td>
+              <td><code>DEVELOPMENT_PROGRESS.html</code>, 개발 진행 확인용, 배포 산출물 아님</td>
             </tr>
             <tr>
               <td>초기 기술 스택</td>
@@ -870,6 +870,14 @@
             <tr>
               <td>2026-06-15 18:42 KST</td>
               <td><code>docs/k8s_pod_shm_access_summary.html</code>에 <code>/proc/&lt;PID&gt;/root/dev/shm</code> 접근 원리와 직접 hostPath mount 실패(<code>invalid argument</code>) 사례를 추가. 현재 방향을 privileged Pod에서 host <code>/proc</code> mount 후 런타임 접근으로 정리.</td>
+            </tr>
+            <tr>
+              <td>2026-06-16 10:48 KST</td>
+              <td><code>new_pod_plan.md/html</code> 내용을 참고해 Pod 분리 방안 도출 과정을 <code>docs/pod-separation-decision-record.html</code>, <code>docs/pod-separation-decision-record.md</code>로 신규 정리. sidecar 초기 제안, 제외 사유, 현재 proc mount 방식 선택 배경을 기록.</td>
+            </tr>
+            <tr>
+              <td>2026-06-16 11:03 KST</td>
+              <td>개발 진행판 파일명을 목적에 맞게 <code>DEVELOPMENT_PROGRESS.html</code>로 변경. 커밋 대상 문서로 관리하기 위해 기존 <code>.local</code> 표기를 제거.</td>
             </tr>
           </tbody>
         </table>

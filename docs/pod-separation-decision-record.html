@@ -1,0 +1,549 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Pod 분리 방안 도출 과정</title>
+  <style>
+    :root {
+      --bg: #f6f8fb;
+      --panel: #ffffff;
+      --ink: #172033;
+      --muted: #667085;
+      --line: #d8dee9;
+      --blue: #2563eb;
+      --blue-soft: #dbeafe;
+      --green: #16803c;
+      --green-soft: #dcfce7;
+      --amber: #b45309;
+      --amber-soft: #fef3c7;
+      --red: #c2410c;
+      --red-soft: #ffedd5;
+      --code-bg: #111827;
+      --code-text: #e5e7eb;
+      --shadow: 0 10px 28px rgba(23, 32, 51, 0.07);
+    }
+
+    * {
+      box-sizing: border-box;
+    }
+
+    body {
+      margin: 0;
+      background: var(--bg);
+      color: var(--ink);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", "Noto Sans KR", "Apple SD Gothic Neo", Arial, sans-serif;
+      line-height: 1.65;
+    }
+
+    .page {
+      max-width: 1160px;
+      margin: 0 auto;
+      padding: 38px 20px 76px;
+    }
+
+    header {
+      padding: 34px 36px;
+      border: 1px solid #bfdbfe;
+      border-radius: 8px;
+      background: #eff6ff;
+      box-shadow: var(--shadow);
+    }
+
+    h1,
+    h2,
+    h3,
+    p {
+      margin-top: 0;
+    }
+
+    h1 {
+      margin-bottom: 12px;
+      font-size: 34px;
+      line-height: 1.24;
+      letter-spacing: 0;
+    }
+
+    h2 {
+      margin: 0 0 16px;
+      padding-bottom: 10px;
+      border-bottom: 2px solid var(--blue-soft);
+      font-size: 23px;
+      letter-spacing: 0;
+    }
+
+    h3 {
+      margin: 22px 0 8px;
+      font-size: 18px;
+      letter-spacing: 0;
+    }
+
+    p {
+      margin-bottom: 12px;
+    }
+
+    .lead {
+      max-width: 880px;
+      margin-bottom: 0;
+      color: #344054;
+      font-size: 17px;
+    }
+
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 18px;
+    }
+
+    .badge {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      border-radius: 999px;
+      padding: 4px 10px;
+      background: #ffffff;
+      color: #1e3a8a;
+      border: 1px solid #bfdbfe;
+      font-size: 13px;
+      font-weight: 700;
+    }
+
+    nav {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+      margin-top: 22px;
+    }
+
+    nav a {
+      color: #1d4ed8;
+      text-decoration: none;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      padding: 10px 12px;
+      font-size: 14px;
+      font-weight: 700;
+    }
+
+    section {
+      margin-top: 24px;
+      padding: 24px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: var(--panel);
+      box-shadow: 0 6px 20px rgba(23, 32, 51, 0.04);
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .box {
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfdff;
+      padding: 16px;
+    }
+
+    .box h3 {
+      margin-top: 0;
+    }
+
+    .box p {
+      margin-bottom: 0;
+      color: var(--muted);
+    }
+
+    .callout {
+      margin: 16px 0;
+      padding: 14px 16px;
+      border: 1px solid #bfdbfe;
+      border-left: 5px solid var(--blue);
+      border-radius: 8px;
+      background: #eff6ff;
+    }
+
+    .callout.good {
+      border-color: #bbf7d0;
+      border-left-color: var(--green);
+      background: var(--green-soft);
+    }
+
+    .callout.warn {
+      border-color: #fde68a;
+      border-left-color: var(--amber);
+      background: var(--amber-soft);
+    }
+
+    .callout.bad {
+      border-color: #fed7aa;
+      border-left-color: var(--red);
+      background: var(--red-soft);
+    }
+
+    .timeline {
+      display: grid;
+      gap: 12px;
+      counter-reset: step;
+    }
+
+    .step {
+      position: relative;
+      padding: 16px 16px 16px 58px;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      background: #fbfdff;
+    }
+
+    .step::before {
+      counter-increment: step;
+      content: counter(step);
+      position: absolute;
+      left: 16px;
+      top: 17px;
+      display: grid;
+      place-items: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--blue);
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .step h3 {
+      margin: 0 0 6px;
+    }
+
+    .step p {
+      margin-bottom: 0;
+      color: var(--muted);
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 14px 0;
+      border: 1px solid var(--line);
+      border-radius: 8px;
+      overflow: hidden;
+      font-size: 14px;
+    }
+
+    th,
+    td {
+      padding: 11px 12px;
+      border-bottom: 1px solid var(--line);
+      text-align: left;
+      vertical-align: top;
+    }
+
+    th {
+      background: #f1f5f9;
+      color: #344054;
+      font-weight: 800;
+    }
+
+    tr:last-child td {
+      border-bottom: 0;
+    }
+
+    code {
+      padding: 2px 5px;
+      border-radius: 5px;
+      background: #eef2ff;
+      color: #1e3a8a;
+      font-family: "SFMono-Regular", Consolas, "Liberation Mono", Menlo, monospace;
+      font-size: 0.93em;
+    }
+
+    pre {
+      overflow-x: auto;
+      margin: 14px 0;
+      padding: 16px;
+      border: 1px solid #1f2937;
+      border-radius: 8px;
+      background: var(--code-bg);
+      color: var(--code-text);
+      font-size: 13px;
+      line-height: 1.55;
+    }
+
+    pre code {
+      padding: 0;
+      background: transparent;
+      color: inherit;
+      border-radius: 0;
+    }
+
+    ul,
+    ol {
+      margin: 0;
+      padding-left: 22px;
+    }
+
+    li + li {
+      margin-top: 6px;
+    }
+
+    .footer {
+      margin-top: 26px;
+      color: var(--muted);
+      font-size: 13px;
+      text-align: center;
+    }
+
+    @media (max-width: 900px) {
+      .page {
+        padding: 24px 12px 56px;
+      }
+
+      header,
+      section {
+        padding: 20px;
+      }
+
+      nav,
+      .grid {
+        grid-template-columns: 1fr;
+      }
+
+      table {
+        display: block;
+        overflow-x: auto;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header>
+      <h1>Pod 분리 방안 도출 과정</h1>
+      <p class="lead">
+        Pod A를 그대로 유지하면서 consumer를 별도 작업 공간으로 분리하기 위해 검토한 대안, 제외 사유,
+        그리고 최종적으로 host <code>/proc</code> mount와 <code>/proc/&lt;PID&gt;/root/dev/shm</code> 접근 방식으로 정리된 이유를 기록합니다.
+      </p>
+      <div class="meta">
+        <span class="badge">작성일: 2026-06-16</span>
+        <span class="badge">목적: Pod A 유지 + consumer 분리</span>
+        <span class="badge">현재 방향: privileged Pod + host /proc mount</span>
+      </div>
+    </header>
+
+    <nav aria-label="문서 목차">
+      <a href="#purpose">1. 목적</a>
+      <a href="#options">2. 초기 대안</a>
+      <a href="#proc">3. proc 접근 검토</a>
+      <a href="#decision">4. 최종 판단</a>
+    </nav>
+
+    <section id="purpose">
+      <h2>1. 목적과 제약</h2>
+      <div class="grid">
+        <article class="box">
+          <h3>Pod A 유지</h3>
+          <p>기존 Pod A의 Helm chart, container 구성, writer 동작을 최대한 변경하지 않습니다.</p>
+        </article>
+        <article class="box">
+          <h3>리소스 분리</h3>
+          <p>Pod A 내부 consumer가 CPU 등 리소스를 사용하지 않도록 별도 Pod에서 처리합니다.</p>
+        </article>
+        <article class="box">
+          <h3>실시간 shm read</h3>
+          <p><code>/dev/shm</code>에 작성되는 ringbuffer 데이터를 지연과 누락을 최소화해 읽어야 합니다.</p>
+        </article>
+      </div>
+
+      <table>
+        <thead>
+          <tr>
+            <th>조건</th>
+            <th>설계에 주는 영향</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>Pod A는 그대로 유지</td>
+            <td>sidecar 추가, volumeMount 추가, writer 코드 변경 같은 선택지는 우선순위가 낮아집니다.</td>
+          </tr>
+          <tr>
+            <td>별도 작업 공간 필요</td>
+            <td>consumer는 Pod A 내부가 아니라 분리된 Pod에서 동작해야 합니다.</td>
+          </tr>
+          <tr>
+            <td>Pod A 리소스 보존</td>
+            <td>consumer 처리 비용을 Pod A의 CPU/메모리 budget에서 제거해야 합니다.</td>
+          </tr>
+          <tr>
+            <td>100ms 단위 ringbuffer 데이터</td>
+            <td>기존 consumer의 read protocol, sequence, partial frame 방지 규칙을 유지해야 합니다.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="options">
+      <h2>2. 초기 대안과 제외 사유</h2>
+
+      <h3>Sidecar container 방식</h3>
+      <p>
+        처음에는 Kubernetes 관점에서 가장 자연스러운 sidecar 방식이 제안되었습니다.
+        writer container와 consumer container를 같은 Pod 안에 두고, memory <code>emptyDir</code> 또는 같은 Pod 내부 공유 경로를 통해 데이터를 읽는 구조입니다.
+      </p>
+
+      <pre><code>Pod A
+  writer container
+    /dev/shm 또는 memory volume에 ringbuffer write
+
+  consumer sidecar container
+    같은 Pod 내부에서 ringbuffer read</code></pre>
+
+      <div class="callout good">
+        <strong>장점:</strong> 같은 Pod 내부 공유는 Kubernetes에서 가장 정석적인 형태입니다. scheduling, lifecycle, tmpfs volume 공유가 명확하고 network hop이 없습니다.
+      </div>
+
+      <div class="callout warn">
+        <strong>제외 이유:</strong> Pod A spec 수정이 필요하고, consumer가 여전히 Pod A와 같은 Pod 리소스 범위에서 동작합니다.
+        이번 목표인 “Pod A를 그대로 유지”와 “Pod A 리소스를 온전히 사용” 조건에 맞지 않았습니다.
+      </div>
+
+      <h3>Pod 간 전달 계층</h3>
+      <table>
+        <thead>
+          <tr>
+            <th>대안</th>
+            <th>장점</th>
+            <th>보류 이유</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>gRPC streaming</td>
+            <td>Pod 간 실시간 전달 구조로 자연스럽습니다.</td>
+            <td>Pod A writer 또는 producer 코드 변경이 필요합니다.</td>
+          </tr>
+          <tr>
+            <td>NATS JetStream</td>
+            <td>ack, replay, durable consumer를 제공할 수 있습니다.</td>
+            <td>별도 메시징 인프라와 publish 로직이 필요합니다.</td>
+          </tr>
+          <tr>
+            <td>Kafka</td>
+            <td>장기 보존, 재처리, consumer group에 강합니다.</td>
+            <td>현재 요구에는 운영 복잡도가 큽니다.</td>
+          </tr>
+          <tr>
+            <td>Redis</td>
+            <td>최신 데이터 공유나 pub/sub 구현이 단순합니다.</td>
+            <td>모든 chunk 보존, 순서 보장, 재처리에 약합니다.</td>
+          </tr>
+          <tr>
+            <td>PVC/RWX</td>
+            <td>파일 기반 계약에는 맞습니다.</td>
+            <td>shm ringbuffer 실시간 read 목적과 다르고 partial write 방지 정책이 필요합니다.</td>
+          </tr>
+        </tbody>
+      </table>
+    </section>
+
+    <section id="proc">
+      <h2>3. proc 기반 접근으로 좁혀진 과정</h2>
+      <div class="timeline">
+        <div class="step">
+          <h3>Pod A를 수정하지 않는 조건 확정</h3>
+          <p>sidecar와 memory volume 공유는 정석적이지만 Pod A spec 변경이 필요해 제외했습니다.</p>
+        </div>
+        <div class="step">
+          <h3>별도 Pod에서 shm을 직접 읽는 요구 확인</h3>
+          <p>consumer를 분리하되, ringbuffer 데이터는 실시간으로 받아야 하므로 Pod A 내부 파일 생성 이후의 배치 전달만으로는 부족했습니다.</p>
+        </div>
+        <div class="step">
+          <h3><code>/proc/&lt;PID&gt;/root/dev/shm</code> 접근 검토</h3>
+          <p>Pod A container의 host PID를 기준으로, 해당 프로세스가 보는 root filesystem을 따라 들어가 <code>/dev/shm</code>을 읽는 방식을 검토했습니다.</p>
+        </div>
+        <div class="step">
+          <h3>직접 hostPath mount 시도</h3>
+          <p>권한을 줄이기 위해 <code>/proc/&lt;PID&gt;/root/dev/shm</code>만 Pod B에 mount하는 방식을 시도했지만 runc <code>invalid argument</code>로 실패했습니다.</p>
+        </div>
+        <div class="step">
+          <h3>host <code>/proc</code> mount 방식으로 정리</h3>
+          <p>Pod B를 privileged로 실행하고 host <code>/proc</code>를 read-only mount한 뒤, runtime에 대상 PID 경로를 직접 읽는 방식으로 정리했습니다.</p>
+        </div>
+      </div>
+
+      <h3><code>/proc/&lt;PID&gt;/root/dev/shm</code>의 의미</h3>
+      <p>
+        Kubernetes container는 Node 입장에서는 Linux process입니다. host의 <code>/proc/&lt;PID&gt;/root</code>는
+        해당 process가 container 내부에서 <code>/</code>로 보는 root filesystem을 가리킵니다.
+        따라서 <code>/proc/&lt;PID&gt;/root/dev/shm</code>은 Pod A container 내부의 <code>/dev/shm</code>을 host에서 따라 들어가는 경로입니다.
+      </p>
+
+      <h3>직접 hostPath mount 실패</h3>
+      <pre><code>Error: failed to create containerd task: failed to create shim task:
+OCI runtime create failed: runc create failed:
+error mounting "/proc/&lt;PID&gt;/root/dev/shm" to rootfs at "/dpp/shm":
+mount /proc/&lt;PID&gt;/root/dev/shm:/dpp/shm (...), flags: 0x5001:
+invalid argument</code></pre>
+
+      <div class="callout bad">
+        <strong>판단:</strong> <code>/proc/&lt;PID&gt;/root/dev/shm</code>은 일반적인 정적 host directory가 아니라 특정 process의 root와 mount namespace를 통해 해석되는 procfs 경로입니다.
+        직접 hostPath mount는 현재 환경에서 실패했으므로 구현 후보에서 제외했습니다.
+      </div>
+    </section>
+
+    <section id="decision">
+      <h2>4. 최종 판단</h2>
+      <table>
+        <thead>
+          <tr>
+            <th>항목</th>
+            <th>판단</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr>
+            <td>sidecar container</td>
+            <td>Kubernetes 정석에 가깝지만 Pod A 유지와 리소스 분리 목적에 맞지 않아 제외</td>
+          </tr>
+          <tr>
+            <td>gRPC/NATS/Kafka/Redis/PVC</td>
+            <td>장기적으로는 표준적이나 Pod A 변경 또는 별도 인프라가 필요해 즉시 적용 제외</td>
+          </tr>
+          <tr>
+            <td>직접 hostPath mount</td>
+            <td>권한 축소 측면에서 매력적이었으나 runc <code>invalid argument</code>로 실패</td>
+          </tr>
+          <tr>
+            <td>privileged Pod + host <code>/proc</code> mount</td>
+            <td>현재 조건에서 Pod A를 유지하고 consumer를 별도 Pod로 분리하기 위한 현실적인 선택</td>
+          </tr>
+        </tbody>
+      </table>
+
+      <div class="callout good">
+        <strong>현재 방향:</strong> Pod B를 <code>privileged: true</code>로 실행하고 host <code>/proc</code>를 read-only mount합니다.
+        Pod B가 Pod A container PID를 찾은 뒤 <code>/host/proc/&lt;PID&gt;/root/dev/shm</code> 경로에서 ringbuffer 데이터를 읽습니다.
+      </div>
+
+      <h3>Confluence용 요약</h3>
+      <p>
+        Pod A를 변경하지 않고 consumer를 별도 작업 공간으로 분리하기 위해 여러 대안을 검토했다. 초기에는 Kubernetes에서 자연스러운 sidecar container와 memory
+        <code>emptyDir</code> 공유 방식이 제안되었지만, 이는 Pod A spec 변경이 필요하고 consumer가 여전히 Pod A의 리소스 범위 안에서 동작하므로
+        “Pod A를 그대로 유지하고 리소스를 온전히 사용하게 한다”는 목적과 맞지 않았다. gRPC, NATS, Kafka, Redis, PVC 같은 Pod 간 전달 구조도 검토했지만
+        Pod A 변경 또는 별도 인프라 추가가 필요했다. 이후 Pod A container의 host PID를 기준으로 <code>/proc/&lt;PID&gt;/root/dev/shm</code>에 접근하는 방식을
+        검토했고, 직접 hostPath mount는 runc <code>invalid argument</code>로 실패했다. 최종적으로는 별도 Pod를 privileged로 실행하고 host
+        <code>/proc</code>를 read-only mount한 뒤, runtime에 Pod A PID를 찾아 <code>/host/proc/&lt;PID&gt;/root/dev/shm</code> 경로에서 ringbuffer 데이터를 읽는 방향으로 정리했다.
+      </p>
+    </section>
+
+    <div class="footer">
+      Pod 분리 방안 도출 과정 · 2026-06-16
+    </div>
+  </div>
+</body>
+</html>
