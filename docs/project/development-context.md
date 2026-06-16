@@ -20,7 +20,7 @@
 - 3회 retry 이후에는 사용자가 `정지` 또는 `다시 시도`를 선택한다. `다시 시도` 횟수 제한은 두지 않는다.
 - `auto_delete_after_transfer`는 기본 `true`다. off이면 전송 성공 후 수동 삭제 버튼을 제공한다.
 - server/downloader는 블랙박스로 취급한다. partial 파일 삭제나 이어받기 성공을 앱이 가정하지 않는다.
-- 기존 수동 흐름 참고 HTML은 `docs/existing-data-flow.html`에 sanitized 형태로 둔다.
+- 기존 수동 흐름 참고 HTML은 `docs/operations/existing-data-flow.html`에 sanitized 형태로 둔다.
 
 ## 실행 환경
 
@@ -39,7 +39,7 @@
 - 터미널 2: 웹 제어 호스트에서 수집 서버에 접속 후 route on, dpp pod 진입, 수집, file server, 정리, route off
 - 터미널 3: 웹 제어 호스트에서 다운로드 클라이언트에 접속 후 다운로드 준비와 downloader 실행
 
-이 수동 흐름은 `docs/existing-data-flow.html`에 push 가능한 sanitized 참고본으로 도식화되어 있다. 실제 IP/계정/내부 경로는 placeholder 상태를 유지해야 한다.
+이 수동 흐름은 `docs/operations/existing-data-flow.html`에 push 가능한 sanitized 참고본으로 도식화되어 있다. 실제 IP/계정/내부 경로는 placeholder 상태를 유지해야 한다.
 
 ## 웹앱 조작 모델
 
@@ -383,7 +383,16 @@ sudo ip route del ${TRANSFER_SUBNET_2} via ${COLLECTOR_GATEWAY}
    - file server/downloader 실제 exit code와 stderr 패턴 확인
    - route/port-forward 실패 케이스 확인
 
-## 로컬 관리 파일
+## 문서 구조
 
-- `DEVELOPMENT_PROGRESS.html`: 메인 채팅이 관리하는 개발 진행판. 배포 산출물이 아니라 진행 확인용 문서.
-- `docs/existing-data-flow.html`: push 가능한 sanitized 기존 수동 흐름 참고 도식.
+- `docs/README.md`: 문서 디렉토리 구조와 Confluence 이관 기준.
+- `docs/project/development-progress.html`: 메인 채팅이 관리하는 개발 진행판 HTML.
+- `docs/project/development-progress.md`: Confluence 이관용 개발 진행판 요약.
+- `docs/project/development-context.md`: 다른 세션 인계를 위한 전체 설계 컨텍스트.
+- `docs/operations/existing-data-flow.html`: push 가능한 sanitized 기존 수동 흐름 참고 도식.
+- `docs/operations/existing-data-flow.md`: Confluence 이관용 기존 수동 흐름 문서. Mermaid 도식 포함.
+- `docs/operations/exist_guild.sh`: sanitized 기존 수동 운영 가이드.
+- `docs/architecture/k8s-pod-shm-access-summary.html`: Kubernetes shm/proc 접근 방식 기술 검토 HTML.
+- `docs/architecture/k8s-pod-shm-access-summary.md`: Confluence 이관용 Kubernetes shm/proc 접근 방식 문서. Mermaid 도식 포함.
+- `docs/decisions/pod-separation-decision-record.html`: Pod 분리 방안 도출 과정 HTML.
+- `docs/decisions/pod-separation-decision-record.md`: Confluence 이관용 Pod 분리 의사결정 기록. Mermaid 도식 포함.
